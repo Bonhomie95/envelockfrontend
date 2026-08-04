@@ -30,6 +30,21 @@ export default function Compose() {
   const runLint = async () => {
     setLint(await api.post("/deliverability/lint", { subject: f.subject, text: f.text, html: f.html }));
   };
+  const sendTest = async () => {
+    if (!f.smtpProfileId) return setErr("Pick a sending mailbox first.");
+    const to = prompt("Send a test email to which address?");
+    if (!to) return;
+    setErr("");
+    try {
+      const r = await api.post("/campaigns/test-send", {
+        smtpProfileId: f.smtpProfileId, toEmail: to,
+        subject: f.subject || "Envelock test", text: f.text, html: f.html,
+      });
+      alert(r.ok ? `✅ Test sent to ${to}` : `❌ ${r.message}`);
+    } catch (e: any) {
+      setErr(e.message);
+    }
+  };
   const runPreview = async () => {
     if (!f.listId) return setErr("Pick a lead list to preview against.");
     setErr("");
@@ -126,6 +141,7 @@ export default function Compose() {
         <div className="row">
           <button className="ghost" onClick={runLint}>Run spam check</button>
           <button className="ghost" onClick={runPreview}>Preview merge</button>
+          <button className="ghost" onClick={sendTest}>Send test to me</button>
         </div>
         {lint && (
           <div className={`alert ${lint.risk === "high" ? "bad" : lint.risk === "medium" ? "warn" : "good"}`}>

@@ -5,9 +5,20 @@ import { api } from "../api";
 export default function Dashboard() {
   const [campaigns, setCampaigns] = useState<any[]>([]);
 
+  const load = () => api.get("/campaigns").then((d) => setCampaigns(d.campaigns));
   useEffect(() => {
-    api.get("/campaigns").then((d) => setCampaigns(d.campaigns));
+    load();
   }, []);
+
+  const del = async (id: string, name: string) => {
+    if (!confirm(`Delete campaign "${name}" and its send log?`)) return;
+    try {
+      await api.del(`/campaigns/${id}`);
+      load();
+    } catch (e: any) {
+      alert(e.message);
+    }
+  };
 
   const totals = campaigns.reduce(
     (a, c) => {
@@ -56,7 +67,10 @@ export default function Dashboard() {
                   <td>{c.counts.failed}</td>
                   <td>{c.counts.opened}</td>
                   <td>{c.counts.clicked}</td>
-                  <td style={{ textAlign: "right" }}><Link to={`/campaigns/${c.id}`}>Open →</Link></td>
+                  <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+                    <Link to={`/campaigns/${c.id}`}>Open →</Link>{" "}
+                    <button className="danger sm" onClick={() => del(c.id, c.name)}>Delete</button>
+                  </td>
                 </tr>
               ))}
             </tbody>

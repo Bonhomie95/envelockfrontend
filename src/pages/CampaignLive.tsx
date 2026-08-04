@@ -68,6 +68,16 @@ export default function CampaignLive() {
     await api.post(`/campaigns/${id}/stop`);
   };
 
+  const retryFailed = async () => {
+    const r = await api.post(`/campaigns/${id}/retry-failed`);
+    if (r.requeued > 0) {
+      await loadDetail();
+      send();
+    } else {
+      alert("No failed recipients to retry.");
+    }
+  };
+
   if (!campaign) return <div className="muted">Loading…</div>;
 
   const counts = rows.reduce((a: any, r) => { a[r.status] = (a[r.status] || 0) + 1; return a; }, {});
@@ -81,6 +91,9 @@ export default function CampaignLive() {
         </div>
         <div>
           {!live && campaign.status !== "sending" && <button onClick={send}>▶ Start sending</button>}
+          {!live && campaign.status === "done" && funnel?.failed > 0 && (
+            <button className="ghost" style={{ marginLeft: 8 }} onClick={retryFailed}>↻ Retry failed</button>
+          )}
           {(live || campaign.status === "sending") && <button className="danger" onClick={stop}>■ Stop</button>}
         </div>
       </div>
