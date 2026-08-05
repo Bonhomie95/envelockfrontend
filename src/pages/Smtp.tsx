@@ -17,6 +17,7 @@ interface Profile {
 const empty = {
   label: "", host: "", port: 587, secure: "starttls",
   username: "", password: "", fromName: "", fromEmail: "", replyTo: "",
+  allowInvalidCert: false, tlsServername: "",
 };
 
 export default function Smtp() {
@@ -40,6 +41,7 @@ export default function Smtp() {
       const r = await api.post("/smtp/test", {
         host: form.host, port: Number(form.port), secure: form.secure,
         username: form.username, password: form.password,
+        allowInvalidCert: form.allowInvalidCert, tlsServername: form.tlsServername || undefined,
       });
       setTest(r);
     } catch (e: any) {
@@ -97,8 +99,8 @@ export default function Smtp() {
         </div>
         <div className="grid2">
           <div>
-            <label>SMTP Host</label>
-            <input value={form.host} onChange={(e) => set("host", e.target.value)} placeholder="smtp.yourdomain.com" />
+            <label>SMTP Host (domain or IP)</label>
+            <input value={form.host} onChange={(e) => set("host", e.target.value)} placeholder="smtp.yourdomain.com or 203.0.113.9" />
           </div>
           <div>
             <label>Port</label>
@@ -127,6 +129,20 @@ export default function Smtp() {
         </div>
         <label>Reply-To (optional)</label>
         <input value={form.replyTo} onChange={(e) => set("replyTo", e.target.value)} placeholder="replies@yourdomain.com" />
+
+        <div className="grid2" style={{ marginTop: 12, alignItems: "end" }}>
+          <div className="check">
+            <input id="aic" type="checkbox" checked={form.allowInvalidCert} onChange={(e) => set("allowInvalidCert", e.target.checked)} />
+            <label htmlFor="aic" style={{ margin: 0 }}>Allow self-signed / IP-proxy TLS</label>
+          </div>
+          <div>
+            <label>TLS server name (optional — for IP proxies)</label>
+            <input value={form.tlsServername} onChange={(e) => set("tlsServername", e.target.value)} placeholder="cert hostname, e.g. mail.provider.com" />
+          </div>
+        </div>
+        <p className="small muted" style={{ marginTop: 6 }}>
+          Connecting to an IP relay? The cert won't match the IP — enable the toggle, or set the TLS server name to the cert's hostname to keep verification on.
+        </p>
 
         {test && (
           <div className={`alert ${test.ok ? "good" : "bad"}`}>
